@@ -1,4 +1,4 @@
-// screens/LoginScreen.js
+
 import React, { useState } from 'react';
 import { 
   View, 
@@ -9,23 +9,26 @@ import {
   ActivityIndicator, 
   StatusBar,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthProvider';
 
 export default function LoginScreen({ navigation }) {
-  const { login } = useAuth();
+  const { login, resendVerificationEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResendButton, setShowResendButton] = useState(false);
 
   const handleLogin = async () => {
     setError('');
+    setShowResendButton(false);
 
-    // Validation
+  
     if (!email || !password) {
       setError('Please enter email and password');
       return;
@@ -42,11 +45,15 @@ export default function LoginScreen({ navigation }) {
       const result = await login(email, password);
 
       if (result.success) {
-        // Navigate to Home screen
+    
         navigation.replace('Home');
       } else {
         setLoading(false);
         setError(result.error || 'Login failed. Please try again.');
+        
+        if (result.needsVerification) {
+          setShowResendButton(true);
+        }
       }
     } catch (err) {
       setLoading(false);
@@ -54,7 +61,38 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  // Loading Screen
+  const handleResendVerification = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      const { auth } = await import('../../firebase');
+      
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      
+      const result = await resendVerificationEmail();
+      
+      setLoading(false);
+      
+      if (result.success) {
+        Alert.alert(
+          'Email Sent!',
+          'A verification email has been sent to your email address. Please check your inbox and verify your account.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        setError(result.error || 'Failed to send verification email.');
+      }
+    } catch (err) {
+      setLoading(false);
+      setError('Failed to resend verification email. Please try again.');
+    }
+  };
+
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -73,21 +111,21 @@ export default function LoginScreen({ navigation }) {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
+     
         <View style={styles.header}>
           <Icon name="school" size={60} color="#fff" />
-          <Text style={styles.headerTitle}>WMSU Attendance</Text>
-          <Text style={styles.headerSubtitle}>Teacher Login</Text>
+          <Text style={styles.headerTitle}>WMSU ElemScan</Text>
+          <Text style={styles.headerSubtitle}>Teacher's Login</Text>
         </View>
 
         <View style={styles.formContainer}>
-          {/* Welcome Text */}
+          
           <View style={styles.welcomeContainer}>
             <Text style={styles.welcomeText}>Welcome Back!</Text>
             <Text style={styles.welcomeSubtext}>Login to continue</Text>
           </View>
 
-          {/* Email Input */}
+        
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
             <View style={styles.inputContainer}>
@@ -104,7 +142,7 @@ export default function LoginScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Password Input */}
+         
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputContainer}>
@@ -127,7 +165,7 @@ export default function LoginScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Error Message */}
+          
           {error ? (
             <View style={styles.errorContainer}>
               <Icon name="alert-circle" size={20} color="#f44336" />
@@ -135,7 +173,18 @@ export default function LoginScreen({ navigation }) {
             </View>
           ) : null}
 
-          {/* Login Button */}
+         
+          {showResendButton && (
+            <TouchableOpacity 
+              style={styles.resendButton}
+              onPress={handleResendVerification}
+            >
+              <Icon name="email-sync" size={20} color="#8B0000" />
+              <Text style={styles.resendButtonText}>Resend Verification Email</Text>
+            </TouchableOpacity>
+          )}
+
+         
           <TouchableOpacity 
             style={styles.loginButton} 
             onPress={handleLogin}
@@ -143,12 +192,12 @@ export default function LoginScreen({ navigation }) {
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
 
-          {/* Forgot Password */}
+          
           <TouchableOpacity style={styles.forgotPasswordContainer}>
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          {/* Register Link */}
+          
           <View style={styles.registerLinkContainer}>
             <Text style={styles.registerLinkText}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -243,6 +292,24 @@ const styles = StyleSheet.create({
     flex: 1, 
     fontSize: 14, 
     color: '#f44336' 
+  },
+  
+  resendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff3e0',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#8B0000',
+    gap: 8
+  },
+  resendButtonText: {
+    fontSize: 14,
+    color: '#8B0000',
+    fontWeight: '600'
   },
   
   loginButton: {

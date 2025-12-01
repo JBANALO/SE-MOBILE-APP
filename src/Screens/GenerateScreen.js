@@ -4,7 +4,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { useAuth } from '../context/AuthProvider'; // ✅ NEW
+import { useAuth } from '../context/AuthProvider'; 
 
 export default function GenerateScreen() {
   const [name, setName] = useState('');
@@ -14,23 +14,23 @@ export default function GenerateScreen() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const { user } = useAuth(); // ✅ Get current user
+  const { user } = useAuth(); 
 
-  // ✅ Load students from Firebase on mount
+  
   useEffect(() => {
     if (user) {
       loadStudents();
     }
   }, [user]);
 
-  // ✅ UPDATED - Load only teacher's students
+ 
   const loadStudents = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
       const studentsRef = collection(db, 'students');
-      const q = query(studentsRef, where('teacherId', '==', user.uid)); // ✅ Filter by teacher
+      const q = query(studentsRef, where('teacherId', '==', user.uid)); 
       const querySnapshot = await getDocs(q);
       
       const studentsList = [];
@@ -47,7 +47,7 @@ export default function GenerateScreen() {
     }
   };
 
-  // ✅ UPDATED - Add student with teacherId
+
   const handleAddStudent = async () => {
     if (!name.trim() || !studentId.trim() || !section.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -65,7 +65,7 @@ export default function GenerateScreen() {
         name: name.trim(),
         studentId: studentId.trim(),
         section: section.trim(),
-        teacherId: user.uid, // ✅ Link to teacher
+        teacherId: user.uid, 
         teacherName: `${user.firstName} ${user.lastName}`, // ✅ For reference
         createdAt: new Date().toISOString(),
       };
@@ -170,7 +170,7 @@ export default function GenerateScreen() {
 
         {/* Add Student Form */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>📝 Add New Student</Text>
+          <Text style={styles.sectionTitle}> Add New Student</Text>
           
           <Text style={styles.label}>Student Name</Text>
           <TextInput
@@ -218,7 +218,7 @@ export default function GenerateScreen() {
         {/* QR Code Display */}
         {qrData && selectedStudent ? (
           <View style={styles.qrCard}>
-            <Text style={styles.qrTitle}>📱 Scan This QR Code</Text>
+            <Text style={styles.qrTitle}> Scan This QR Code</Text>
             <View style={styles.qrContainer}>
               <QRCode
                 value={qrData}
@@ -243,10 +243,10 @@ export default function GenerateScreen() {
           </View>
         ) : null}
 
-        {/* Students List by Section */}
+       
         <View style={styles.card}>
           <View style={styles.listHeader}>
-            <Text style={styles.sectionTitle}>👥 Students List</Text>
+            <Text style={styles.sectionTitle}> Students List</Text>
             <TouchableOpacity onPress={loadStudents} disabled={loading}>
               <Icon name="refresh" size={24} color="#8B0000" />
             </TouchableOpacity>
@@ -268,7 +268,7 @@ export default function GenerateScreen() {
               {Object.keys(groupedStudents).sort().map((sectionName) => (
                 <View key={sectionName} style={styles.sectionGroup}>
                   <Text style={styles.sectionGroupTitle}>
-                    📚 {sectionName} ({groupedStudents[sectionName].length})
+                     {sectionName} ({groupedStudents[sectionName].length})
                   </Text>
                   {groupedStudents[sectionName].map((student) => (
                     <View key={student.id} style={styles.studentItem}>
@@ -303,7 +303,7 @@ export default function GenerateScreen() {
 
         {/* Instructions */}
         <View style={styles.instructionsCard}>
-          <Text style={styles.instructionsTitle}>💡 How to Use:</Text>
+          <Text style={styles.instructionsTitle}>How to Use:</Text>
           <Text style={styles.instructionText}>1. Add students using the form above</Text>
           <Text style={styles.instructionText}>2. Tap the QR icon to generate their QR code</Text>
           <Text style={styles.instructionText}>3. Students scan their QR code during attendance</Text>

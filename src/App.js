@@ -1,4 +1,3 @@
-// App.js (located in src/App.js)
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -7,7 +6,6 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import AuthProvider from './context/AuthProvider';
 import { AttendanceProvider } from './context/AttendanceContext';
 
-// Import your screens
 import LoginScreen from './Screens/LoginScreen';
 import RegisterScreen from './Screens/RegisterScreen';
 import HomeScreen from './Screens/HomeScreen';
@@ -15,11 +13,11 @@ import LogScreen from './Screens/LogScreen';
 import GenerateScreen from './Screens/GenerateScreen';
 import ScanQRScreen from './Screens/ScanQRScreen';
 import ProfileScreen from './Screens/ProfileScreen';
+import TermsScreen from './Screens/TermsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Main Tab Navigator (after login)
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -31,13 +29,17 @@ function MainTabs() {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#e0e0e0',
-          height: 60,
-          paddingBottom: 8,
+          height: 70,
+          paddingBottom: 12,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: '600',
+          marginBottom: 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
         },
       }}
     >
@@ -47,7 +49,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <Icon name="home" size={size} color={color} />
+            <Icon name="home" size={26} color={color} />
           ),
         }}
       />
@@ -57,7 +59,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Generate',
           tabBarIcon: ({ color, size }) => (
-            <Icon name="qrcode" size={size} color={color} />
+            <Icon name="qrcode" size={26} color={color} />
           ),
         }}
       />
@@ -67,7 +69,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Scan',
           tabBarIcon: ({ color, size }) => (
-            <Icon name="camera" size={size} color={color} />
+            <Icon name="camera" size={26} color={color} />
           ),
         }}
       />
@@ -77,7 +79,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Logs',
           tabBarIcon: ({ color, size }) => (
-            <Icon name="clipboard-text" size={size} color={color} />
+            <Icon name="clipboard-text" size={26} color={color} />
           ),
         }}
       />
@@ -87,7 +89,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <Icon name="account" size={size} color={color} />
+            <Icon name="account" size={26} color={color} />
           ),
         }}
       />
@@ -95,7 +97,6 @@ function MainTabs() {
   );
 }
 
-// Main App with Auth Stack
 export default function App() {
   return (
     <AuthProvider>
@@ -107,6 +108,17 @@ export default function App() {
           >
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen 
+              name="Terms" 
+              component={TermsScreen}
+              options={{ 
+                headerShown: true,
+                title: 'Terms and Conditions',
+                headerStyle: { backgroundColor: '#8B0000' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' }
+              }}
+            />
             <Stack.Screen name="Home" component={MainTabs} />
           </Stack.Navigator>
         </NavigationContainer>

@@ -1,14 +1,14 @@
-// context/AuthProvider.js
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged 
+  onAuthStateChanged,
+  sendEmailVerification
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../firebase'; // Path from src/context/ to root firebase.js
-
+import { auth, db } from '../../firebase'; 
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -24,12 +24,11 @@ export default function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 
-  // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        // Load user data from Firestore
+       
         await loadUserData(firebaseUser.uid);
       } else {
         setUser(null);
@@ -41,7 +40,6 @@ export default function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  // Load user data from Firestore
   const loadUserData = async (uid) => {
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
@@ -53,16 +51,18 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  // Register function
+  
   const register = async (formData) => {
     try {
       const { firstName, middleName, lastName, email, password } = formData;
 
-      // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
 
-      // Save additional user data to Firestore
+     
+      await sendEmailVerification(userCredential.user);
+
+      
       await setDoc(doc(db, 'users', uid), {
         uid,
         firstName,
@@ -71,10 +71,17 @@ export default function AuthProvider({ children }) {
         email,
         fullName: `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`,
         role: 'teacher', // Default role
+        emailVerified: false,
         createdAt: new Date().toISOString(),
       });
 
-      return { success: true };
+      // Sign out the user after registration (they need to verify email first)
+      await signOut(auth);
+
+      return { 
+        success: true, 
+        message: 'Registration successful! Please check your email to verify your account before logging in.' 
+      };
     } catch (error) {
       console.error('Registration error:', error);
       
@@ -92,19 +99,33 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  // Login function
+  
   const login = async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      // Load user data
+   
+      if (!userCredential.user.emailVerified) {
+        
+        await signOut(auth);
+        return { 
+          success: false, 
+          error: 'Please verify your email address before logging in. Check your inbox for the verification link.',
+          needsVerification: true
+        };
+      }
+
       await loadUserData(userCredential.user.uid);
+
+  
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        emailVerified: true
+      }, { merge: true });
 
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
       
-      // Handle Firebase errors
       let errorMessage = 'Login failed. Please try again.';
       if (error.code === 'auth/user-not-found') {
         errorMessage = 'No account found with this email.';
@@ -120,7 +141,30 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  // Logout function
+ 
+  const resendVerificationEmail = async () => {
+    try {
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
+        return { 
+          success: true, 
+          message: 'Verification email sent! Please check your inbox.' 
+        };
+      }
+      return { 
+        success: false, 
+        error: 'No user logged in. Please login first.' 
+      };
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return { 
+        success: false, 
+        error: 'Failed to send verification email. Please try again later.' 
+      };
+    }
+  };
+
+  
   const logout = async () => {
     try {
       await signOut(auth);
@@ -140,6 +184,7 @@ export default function AuthProvider({ children }) {
     register,
     login,
     logout,
+    resendVerificationEmail,
   };
 
   return (

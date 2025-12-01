@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAttendance } from '../context/AttendanceContext';
-import { useAuth } from '../context/AuthProvider'; // ✅ NEW
-import { collection, getDocs, query, where } from 'firebase/firestore'; // ✅ UPDATED
-import { db } from '../../firebase'; // Changed from '../firebase'
+import { useAuth } from '../context/AuthProvider'; 
+import { collection, getDocs, query, where } from 'firebase/firestore'; 
+import { db } from '../../firebase'; 
 
 export default function LogScreen() {
   const [students, setStudents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedPeriod, setSelectedPeriod] = useState('all'); // 'all', 'morning', 'afternoon'
+  const [selectedPeriod, setSelectedPeriod] = useState('all'); 
   const [loading, setLoading] = useState(false);
   const { attendanceLog, getTodayStats } = useAttendance();
-  const { user } = useAuth(); // ✅ Get current user
+  const { user } = useAuth(); 
 
   useEffect(() => {
     if (user) {
@@ -20,7 +20,6 @@ export default function LogScreen() {
     }
   }, [user]);
 
-  // ✅ UPDATED - Load only teacher's students
   const loadStudents = async () => {
     if (!user) return;
 
@@ -42,7 +41,7 @@ export default function LogScreen() {
     }
   };
 
-  // Get today's date string
+
   const getTodayString = () => {
     return selectedDate.toLocaleDateString('en-US', {
       month: 'numeric',
@@ -51,7 +50,7 @@ export default function LogScreen() {
     });
   };
 
-  // Filter logs for selected date and period
+  
   const getFilteredLogs = () => {
     const dateString = getTodayString();
     let logs = attendanceLog.filter(log => log.date === dateString);
@@ -63,12 +62,11 @@ export default function LogScreen() {
     return logs;
   };
 
-  // Group logs by section
+  
   const getLogsBySection = () => {
     const logs = getFilteredLogs();
     const grouped = {};
 
-    // Group students by section
     students.forEach(student => {
       const section = student.section || 'No Section';
       if (!grouped[section]) {
@@ -79,7 +77,7 @@ export default function LogScreen() {
         };
       }
 
-      // Find student's attendance
+    
       const morningLog = logs.find(log => 
         log.studentId === student.studentId && log.period === 'morning'
       );
@@ -87,7 +85,7 @@ export default function LogScreen() {
         log.studentId === student.studentId && log.period === 'afternoon'
       );
 
-      // Count stats
+      
       if (selectedPeriod === 'all' || selectedPeriod === 'morning') {
         if (morningLog) {
           if (morningLog.status === 'present') grouped[section].morning.present++;
@@ -121,7 +119,7 @@ export default function LogScreen() {
   const logsBySection = getLogsBySection();
   const stats = getTodayStats();
 
-  // Get status text and color (minimalist)
+  
   const getStatusDisplay = (log) => {
     if (!log) return { text: 'Absent', color: '#f44336' };
     
@@ -137,7 +135,7 @@ export default function LogScreen() {
     }
   };
 
-  // ✅ Show loading if no user
+
   if (!user) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -237,7 +235,6 @@ export default function LogScreen() {
           </View>
         )}
 
-        {/* Logs by Section */}
         <ScrollView style={styles.scrollView}>
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -263,7 +260,6 @@ export default function LogScreen() {
                       </Text>
                     </View>
 
-                    {/* Section Stats */}
                     {selectedPeriod === 'all' ? (
                       <View style={styles.sectionStatsRow}>
                         <View style={styles.sectionStatItem}>
@@ -289,7 +285,7 @@ export default function LogScreen() {
                       </View>
                     )}
 
-                    {/* Student List - Minimalist */}
+                    
                     {section.students.map((student, index) => (
                       <View key={student.id} style={styles.studentRow}>
                         <View style={styles.studentInfo}>

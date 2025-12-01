@@ -19,7 +19,7 @@ export default function ScanQRScreen() {
   const { addAttendance, checkAttendanceStatus } = useAttendance();
   const { user } = useAuth();
 
-  // Update time every second
+  
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -28,32 +28,32 @@ export default function ScanQRScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Request camera permission on mount
+ 
   useEffect(() => {
     if (!permission) {
       requestPermission();
     }
   }, []);
 
-  // Get current period message
+
   const getPeriodMessage = () => {
     const hour = currentTime.getHours();
     const period = hour < 12 ? 'morning' : 'afternoon';
     
     if (period === 'morning') {
       if (hour < 8) return { text: '✓ Before 8:00 AM - PRESENT', color: '#4caf50', icon: 'check-circle' };
-      if (hour < 10) return { text: '⚠️ 8:00-9:59 AM - LATE', color: '#ff9800', icon: 'clock-alert' };
-      return { text: '❌ After 10:00 AM - ABSENT', color: '#f44336', icon: 'close-circle' };
+      if (hour < 10) return { text: ' 8:00-9:59 AM - LATE', color: '#ff9800', icon: 'clock-alert' };
+      return { text: ' After 10:00 AM - ABSENT', color: '#f44336', icon: 'close-circle' };
     } else {
       if (hour < 14) return { text: '✓ Before 2:00 PM - PRESENT', color: '#4caf50', icon: 'check-circle' };
-      if (hour < 15) return { text: '⚠️ 2:00-2:59 PM - LATE', color: '#ff9800', icon: 'clock-alert' };
-      return { text: '❌ After 3:00 PM - ABSENT', color: '#f44336', icon: 'close-circle' };
+      if (hour < 15) return { text: ' 2:00-2:59 PM - LATE', color: '#ff9800', icon: 'clock-alert' };
+      return { text: ' After 3:00 PM - ABSENT', color: '#f44336', icon: 'close-circle' };
     }
   };
 
   const periodMsg = getPeriodMessage();
 
-  // Verify student belongs to teacher
+  
   const handleBarCodeScanned = async ({ data }) => {
     if (hasScanned || !user) return;
     
@@ -61,10 +61,10 @@ export default function ScanQRScreen() {
     setScanning(false);
 
     try {
-      // Parse QR code data
+     
       const qrData = JSON.parse(data);
       
-      // Verify student exists and belongs to this teacher
+      
       if (qrData.studentId) {
         try {
           const studentsRef = collection(db, 'students');
@@ -88,7 +88,7 @@ export default function ScanQRScreen() {
         }
       }
 
-      // Check attendance status automatically
+    
       const { status, period } = checkAttendanceStatus();
       setAttendanceStatus(status);
       setAttendancePeriod(period);
@@ -107,7 +107,7 @@ export default function ScanQRScreen() {
         })
       });
     } catch (e) {
-      // Fallback for old QR codes without JSON
+     
       Alert.alert(
         'Invalid QR Code',
         'This QR code format is not recognized. Please generate a new one.',
@@ -130,14 +130,14 @@ export default function ScanQRScreen() {
 
   const handleConfirmAttendance = async () => {
     try {
-      // Add to attendance log with correct parameter order
+     
       await addAttendance(
         scannedStudent.studentId,
         attendancePeriod,
         attendanceStatus
       );
       
-      const statusEmoji = attendanceStatus === 'present' ? '✅' : attendanceStatus === 'late' ? '⚠️' : '❌';
+      const statusEmoji = attendanceStatus === 'present' ? '' : attendanceStatus === 'late' ? '' : '';
       const periodText = attendancePeriod === 'morning' ? 'Morning' : 'Afternoon';
       
       Alert.alert(
@@ -210,7 +210,6 @@ export default function ScanQRScreen() {
           </View>
         </View>
 
-        {/* Period Status Banner */}
         <View style={[styles.warningBanner, { backgroundColor: periodMsg.color }]}>
           <Icon name={periodMsg.icon} size={20} color="#fff" />
           <Text style={styles.warningText}>{periodMsg.text}</Text>
@@ -271,7 +270,7 @@ export default function ScanQRScreen() {
                     </View>
                     <View style={styles.periodBadge}>
                       <Text style={styles.periodText}>
-                        {scannedStudent?.period === 'morning' ? '🌅 MORNING' : '🌆 AFTERNOON'}
+                        {scannedStudent?.period === 'morning' ? ' MORNING' : ' AFTERNOON'}
                       </Text>
                     </View>
                   </View>
@@ -287,7 +286,6 @@ export default function ScanQRScreen() {
               </View>
             </View>
 
-            {/* Auto Status Message */}
             <View style={[
               styles.autoStatusMessage,
               attendanceStatus === 'absent' ? styles.absentMessage :
@@ -295,14 +293,14 @@ export default function ScanQRScreen() {
             ]}>
               <Text style={styles.autoStatusText}>
                 {attendanceStatus === 'absent' 
-                  ? `❌ Auto-marked ABSENT (${scannedStudent?.period === 'morning' ? 'After 10 AM' : 'After 3 PM'})`
+                  ? ` Auto-marked ABSENT (${scannedStudent?.period === 'morning' ? 'After 10 AM' : 'After 3 PM'})`
                   : attendanceStatus === 'late'
-                  ? `⚠️ Auto-marked LATE (${scannedStudent?.period === 'morning' ? '8-9:59 AM' : '2-2:59 PM'})`
-                  : `✅ Auto-marked PRESENT (${scannedStudent?.period === 'morning' ? 'Before 8 AM' : 'Before 2 PM'})`}
+                  ? ` Auto-marked LATE (${scannedStudent?.period === 'morning' ? '8-9:59 AM' : '2-2:59 PM'})`
+                  : ` Auto-marked PRESENT (${scannedStudent?.period === 'morning' ? 'Before 8 AM' : 'Before 2 PM'})`}
               </Text>
             </View>
 
-            {/* Manual Override */}
+        
             <Text style={styles.overrideLabel}>Override if needed:</Text>
             <View style={styles.actionButtons}>
               <TouchableOpacity 

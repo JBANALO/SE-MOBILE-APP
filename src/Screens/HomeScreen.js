@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar, Modal, ActivityIndicator, Linking } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAttendance } from '../context/AttendanceContext';
-import { useAuth } from '../context/AuthProvider'; // ✅ NEW
-import { collection, getDocs, query, where } from 'firebase/firestore'; // ✅ UPDATED
+import { useAuth } from '../context/AuthProvider';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 
@@ -14,19 +14,21 @@ export default function HomeScreen() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const { attendanceLog, getTodayStats, addManualAbsence, removeAbsence, getAttendancePeriod, recordAttendance } = useAttendance();
-  const { user, loading: authLoading } = useAuth(); // ✅ Get current user and loading state
+  const { user, userData, loading: authLoading } = useAuth();
   
   
-  // ✅ FIXED - Properly handle teacher name display
   const getTeacherName = () => {
     if (!user) return 'Teacher';
     
-    // Check if firstName and lastName exist and are not empty
-    if (user.firstName && user.lastName && user.firstName.trim() && user.lastName.trim()) {
-      return `${user.firstName} ${user.lastName}`;
+    
+    if (userData?.firstName && userData.firstName.trim()) {
+      return userData.firstName;
     }
     
-    // Fallback to email username
+    if (user.firstName && user.firstName.trim()) {
+      return user.firstName;
+    }
+    
     if (user.email) {
       const emailName = user.email.split('@')[0];
       return emailName.charAt(0).toUpperCase() + emailName.slice(1).replace(/[._]/g, ' ');
@@ -58,16 +60,15 @@ export default function HomeScreen() {
     if (user) {
       loadStudents();
     }
-  }, [user]); // ✅ Reload when user changes
+  }, [user]);
 
-  // ✅ UPDATED - Load only teacher's students
   const loadStudents = async () => {
     if (!user) return;
     
     setLoading(true);
     try {
       const studentsRef = collection(db, 'students');
-      const q = query(studentsRef, where('teacherId', '==', user.uid)); // ✅ Filter by teacher
+      const q = query(studentsRef, where('teacherId', '==', user.uid));
       const querySnapshot = await getDocs(q);
       
       const studentsList = [];
@@ -214,7 +215,6 @@ ${teacher.department}`;
 
   const currentPeriod = getAttendancePeriod();
 
-  // ✅ Show message if no user logged in or still loading
   if (authLoading || !user) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -273,11 +273,12 @@ ${teacher.department}`;
         </View>
 
         <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>📊 Today's Attendance</Text>
+          <Text style={styles.sectionTitle}> Today's Attendance</Text>
 
           <View style={styles.periodCard}>
             <View style={styles.periodHeader}>
-              <Text style={styles.periodTitle}>☀️ Morning Session</Text>
+              <Text style={styles.periodTitle}>Morning Session</Text>
+              <Icon name="white-balance-sunny" size={24} color="#FFA500" />
             </View>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
@@ -297,7 +298,8 @@ ${teacher.department}`;
 
           <View style={styles.periodCard}>
             <View style={styles.periodHeader}>
-              <Text style={styles.periodTitle}>🌙 Afternoon Session</Text>
+              <Text style={styles.periodTitle}>Afternoon Session</Text>
+              <Icon name="weather-sunset" size={24} color="#FF6B35" />
             </View>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
@@ -317,7 +319,7 @@ ${teacher.department}`;
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>📚 Sections Overview</Text>
+          <Text style={styles.sectionTitle}> Sections Overview</Text>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#8B0000" />
@@ -351,16 +353,22 @@ ${teacher.department}`;
                   
                   <View style={styles.sectionStats}>
                     <View style={styles.periodStat}>
-                      <Text style={styles.periodStatLabel}>☀️ Morning</Text>
-                      <Text style={styles.periodStatValue}>
-                        P:{attendance.stats.morning.present} L:{attendance.stats.morning.late} A:{attendance.stats.morning.absent}
-                      </Text>
+                      <Text style={styles.periodStatLabel}>Morning</Text>
+                      <View style={styles.periodStatRight}>
+                        <Text style={styles.periodStatValue}>
+                          P:{attendance.stats.morning.present} L:{attendance.stats.morning.late} A:{attendance.stats.morning.absent}
+                        </Text>
+                        <Icon name="white-balance-sunny" size={18} color="#FFA500" />
+                      </View>
                     </View>
                     <View style={styles.periodStat}>
-                      <Text style={styles.periodStatLabel}>🌙 Afternoon</Text>
-                      <Text style={styles.periodStatValue}>
-                        P:{attendance.stats.afternoon.present} L:{attendance.stats.afternoon.late} A:{attendance.stats.afternoon.absent}
-                      </Text>
+                      <Text style={styles.periodStatLabel}>Afternoon</Text>
+                      <View style={styles.periodStatRight}>
+                        <Text style={styles.periodStatValue}>
+                          P:{attendance.stats.afternoon.present} L:{attendance.stats.afternoon.late} A:{attendance.stats.afternoon.absent}
+                        </Text>
+                        <Icon name="weather-sunset" size={18} color="#FF6B35" />
+                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -396,13 +404,19 @@ ${teacher.department}`;
 
                 <View style={styles.modalPeriodStats}>
                   <View style={styles.modalPeriodCard}>
-                    <Text style={styles.modalPeriodLabel}>☀️ Morning</Text>
+                    <View style={styles.modalPeriodHeader}>
+                      <Text style={styles.modalPeriodLabel}>Morning</Text>
+                      <Icon name="white-balance-sunny" size={20} color="#FFA500" />
+                    </View>
                     <Text style={styles.modalPeriodValue}>
                       P:{selectedSection.stats.morning.present} L:{selectedSection.stats.morning.late} A:{selectedSection.stats.morning.absent}
                     </Text>
                   </View>
                   <View style={styles.modalPeriodCard}>
-                    <Text style={styles.modalPeriodLabel}>🌙 Afternoon</Text>
+                    <View style={styles.modalPeriodHeader}>
+                      <Text style={styles.modalPeriodLabel}>Afternoon</Text>
+                      <Icon name="weather-sunset" size={20} color="#FF6B35" />
+                    </View>
                     <Text style={styles.modalPeriodValue}>
                       P:{selectedSection.stats.afternoon.present} L:{selectedSection.stats.afternoon.late} A:{selectedSection.stats.afternoon.absent}
                     </Text>
@@ -567,6 +581,7 @@ const styles = StyleSheet.create({
   periodHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
@@ -607,8 +622,17 @@ const styles = StyleSheet.create({
   sectionName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   sectionCount: { fontSize: 13, color: '#666', marginTop: 4 },
   sectionStats: { gap: 8 },
-  periodStat: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  periodStat: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
   periodStatLabel: { fontSize: 13, fontWeight: '600', color: '#666' },
+  periodStatRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   periodStatValue: { fontSize: 12, color: '#666' },
   
   modalOverlay: {
@@ -637,7 +661,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
   },
-  modalPeriodLabel: { fontSize: 13, fontWeight: 'bold', color: '#666', marginBottom: 4 },
+  modalPeriodHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalPeriodLabel: { fontSize: 13, fontWeight: 'bold', color: '#666' },
   modalPeriodValue: { fontSize: 12, color: '#666' },
   modalScroll: { maxHeight: 400 },
   studentRow: {

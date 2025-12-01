@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, StatusBar, Alert } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthProvider';
 
@@ -21,7 +21,6 @@ export default function RegisterScreen({ navigation }) {
 
   const handleChange = (name, value) => setForm({ ...form, [name]: value });
 
-  // Check if email is WMSU
   const isWMSUEmail = (email) => {
     return email.toLowerCase().endsWith('@wmsu.edu.ph');
   };
@@ -29,13 +28,11 @@ export default function RegisterScreen({ navigation }) {
   const handleSubmit = async () => {
     setError('');
 
-    // Validation
     if (!form.firstName || !form.lastName || !form.email || !form.password) {
       setError('Please fill all required fields');
       return;
     }
 
-    // WMSU Email Validation - REQUIRED FOR TEACHERS
     if (!isWMSUEmail(form.email)) {
       setError('Only WMSU teachers can register. Please use your @wmsu.edu.ph email address.');
       return;
@@ -61,19 +58,24 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    // Start loading
     setLoading(true);
 
     try {
       const result = await register(form);
 
       if (result.success) {
-        // Show success message with loading
-        setTimeout(() => {
-          setLoading(false);
-          // Navigate to Login screen
-          navigation.replace('Login');
-        }, 1500); // 1.5 second delay to show success
+        setLoading(false);
+        
+        Alert.alert(
+          'Registration Successful! ',
+          'Please check your email inbox and verify your account before logging in. Check your spam folder if you don\'t see it.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.replace('Login')
+            }
+          ]
+        );
       } else {
         setLoading(false);
         setError(result.error || 'Registration failed. Please try again.');
@@ -84,7 +86,6 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // Loading Screen
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -100,14 +101,12 @@ export default function RegisterScreen({ navigation }) {
     <>
       <StatusBar backgroundColor="#8B0000" barStyle="light-content" />
       <ScrollView style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Create Account</Text>
           <Text style={styles.headerSubtitle}>For WMSU Teachers Only</Text>
         </View>
 
         <View style={styles.formContainer}>
-          {/* WMSU Notice */}
           <View style={styles.noticeCard}>
             <Icon name="shield-account" size={24} color="#8B0000" />
             <View style={styles.noticeContent}>
@@ -118,7 +117,15 @@ export default function RegisterScreen({ navigation }) {
             </View>
           </View>
 
-          {/* First Name */}
+          <View style={styles.verificationNotice}>
+            <Icon name="email-check" size={20} color="#1976d2" />
+            <View style={styles.noticeContent}>
+              <Text style={styles.verificationText}>
+                You'll need to verify your email before you can login
+              </Text>
+            </View>
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               First Name <Text style={styles.required}>*</Text>
@@ -135,7 +142,6 @@ export default function RegisterScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Middle Name */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Middle Name</Text>
             <View style={styles.inputContainer}>
@@ -150,7 +156,6 @@ export default function RegisterScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Last Name */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               Last Name <Text style={styles.required}>*</Text>
@@ -167,7 +172,6 @@ export default function RegisterScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Email with Validation Indicator */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               WMSU Email Address <Text style={styles.required}>*</Text>
@@ -198,7 +202,6 @@ export default function RegisterScreen({ navigation }) {
             )}
           </View>
 
-          {/* Password */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               Password <Text style={styles.required}>*</Text>
@@ -222,7 +225,6 @@ export default function RegisterScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Confirm Password */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               Confirm Password <Text style={styles.required}>*</Text>
@@ -246,7 +248,6 @@ export default function RegisterScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Terms Checkbox */}
           <TouchableOpacity 
             style={styles.checkboxContainer} 
             onPress={() => handleChange('agreedToTerms', !form.agreedToTerms)}
@@ -254,10 +255,14 @@ export default function RegisterScreen({ navigation }) {
             <View style={[styles.checkbox, form.agreedToTerms && styles.checkboxChecked]}>
               {form.agreedToTerms && <Icon name="check" size={16} color="#fff" />}
             </View>
-            <Text style={styles.checkboxLabel}>I agree to terms and conditions</Text>
+            <View style={styles.termsTextContainer}>
+              <Text style={styles.checkboxLabel}>I agree to the </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
+                <Text style={styles.termsLink}>Terms and Conditions</Text>
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
 
-          {/* Error Message */}
           {error ? (
             <View style={styles.errorContainer}>
               <Icon name="alert-circle" size={20} color="#f44336" />
@@ -265,7 +270,6 @@ export default function RegisterScreen({ navigation }) {
             </View>
           ) : null}
 
-          {/* Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
               style={styles.createButton} 
@@ -282,7 +286,6 @@ export default function RegisterScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Login Link */}
           <View style={styles.loginLinkContainer}>
             <Text style={styles.loginLinkText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -297,7 +300,6 @@ export default function RegisterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  
   header: { 
     backgroundColor: '#8B0000', 
     padding: 20,
@@ -306,22 +308,29 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#fff' },
   headerSubtitle: { fontSize: 14, color: '#fff', opacity: 0.9, marginTop: 4 },
-  
   formContainer: { padding: 20 },
-  
   noticeCard: {
     flexDirection: 'row',
     backgroundColor: '#fff3e0',
     padding: 16,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 12,
     borderLeftWidth: 4,
     borderLeftColor: '#8B0000'
   },
   noticeContent: { flex: 1, marginLeft: 12 },
   noticeTitle: { fontSize: 15, fontWeight: 'bold', color: '#333', marginBottom: 4 },
   noticeText: { fontSize: 13, color: '#666' },
-  
+  verificationNotice: {
+    flexDirection: 'row',
+    backgroundColor: '#e3f2fd',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#1976d2'
+  },
+  verificationText: { fontSize: 13, color: '#1565c0', fontWeight: '500' },
   inputGroup: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 },
   required: { color: '#f44336', fontSize: 14 },
@@ -339,7 +348,6 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 8 },
   input: { flex: 1, fontSize: 15, color: '#333' },
   errorText: { fontSize: 12, color: '#f44336', marginTop: 4, marginLeft: 4 },
-  
   checkboxContainer: { 
     flexDirection: 'row', 
     alignItems: 'center', 
@@ -356,8 +364,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   checkboxChecked: { backgroundColor: '#8B0000' },
+  termsTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
   checkboxLabel: { fontSize: 14, color: '#333' },
-  
+  termsLink: {
+    fontSize: 14,
+    color: '#8B0000',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,7 +386,6 @@ const styles = StyleSheet.create({
     gap: 8
   },
   errorMessage: { flex: 1, fontSize: 14, color: '#f44336' },
-  
   buttonContainer: { gap: 12 },
   createButton: {
     backgroundColor: '#8B0000',
@@ -384,7 +401,6 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   cancelButtonText: { color: '#333', fontSize: 16, fontWeight: '600' },
-  
   loginLinkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -393,8 +409,6 @@ const styles = StyleSheet.create({
   },
   loginLinkText: { fontSize: 14, color: '#666' },
   loginLink: { fontSize: 14, color: '#8B0000', fontWeight: 'bold' },
-  
-  // Loading Screen
   loadingContainer: {
     flex: 1,
     backgroundColor: '#f5f5f5',
