@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { Platform } from 'react-native';
 import AuthProvider from './context/AuthProvider';
 import { AttendanceProvider } from './context/AttendanceContext';
 
@@ -26,12 +27,24 @@ function MainTabs() {
         tabBarActiveTintColor: '#8B0000',
         tabBarInactiveTintColor: '#999',
         tabBarStyle: {
+          position: 'absolute', 
+          bottom: 0,
+          left: 0,
+          right: 0,
+          elevation: 8, 
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#e0e0e0',
-          height: 70,
-          paddingBottom: 12,
+          height: Platform.OS === 'ios' ? 85 : 70, 
+          paddingBottom: Platform.OS === 'ios' ? 20 : 12,
           paddingTop: 8,
+          shadowColor: '#000', 
+          shadowOffset: {
+            width: 0,
+            height: -2,
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
         },
         tabBarLabelStyle: {
           fontSize: 12,

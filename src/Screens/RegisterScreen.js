@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, StatusBar, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, StatusBar, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthProvider';
 
@@ -67,7 +67,7 @@ export default function RegisterScreen({ navigation }) {
         setLoading(false);
         
         Alert.alert(
-          'Registration Successful! ',
+          'Registration Successful',
           'Please check your email inbox and verify your account before logging in. Check your spam folder if you don\'t see it.',
           [
             {
@@ -100,200 +100,211 @@ export default function RegisterScreen({ navigation }) {
   return (
     <>
       <StatusBar backgroundColor="#8B0000" barStyle="light-content" />
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Create Account</Text>
-          <Text style={styles.headerSubtitle}>For WMSU Teachers Only</Text>
-        </View>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          style={styles.container}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Create Account</Text>
+            <Text style={styles.headerSubtitle}>For WMSU Teachers Only</Text>
+          </View>
 
-        <View style={styles.formContainer}>
-          <View style={styles.noticeCard}>
-            <Icon name="shield-account" size={24} color="#8B0000" />
-            <View style={styles.noticeContent}>
-              <Text style={styles.noticeTitle}>Teachers Only</Text>
-              <Text style={styles.noticeText}>
-                You must use your WMSU email address (@wmsu.edu.ph) to register as a teacher.
+          <View style={styles.formContainer}>
+            <View style={styles.noticeCard}>
+              <Icon name="shield-account" size={24} color="#8B0000" />
+              <View style={styles.noticeContent}>
+                <Text style={styles.noticeTitle}>Teachers Only</Text>
+                <Text style={styles.noticeText}>
+                  You must use your WMSU email address (@wmsu.edu.ph) to register as a teacher.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.verificationNotice}>
+              <Icon name="email-check" size={20} color="#1976d2" />
+              <View style={styles.noticeContent}>
+                <Text style={styles.verificationText}>
+                  You'll need to verify your email before you can login
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                First Name <Text style={styles.required}>*</Text>
               </Text>
-            </View>
-          </View>
-
-          <View style={styles.verificationNotice}>
-            <Icon name="email-check" size={20} color="#1976d2" />
-            <View style={styles.noticeContent}>
-              <Text style={styles.verificationText}>
-                You'll need to verify your email before you can login
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              First Name <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={styles.inputContainer}>
-              <Icon name="account" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                value={form.firstName}
-                onChangeText={(v) => handleChange('firstName', v)}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Middle Name</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="account-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Middle Name (Optional)"
-                value={form.middleName}
-                onChangeText={(v) => handleChange('middleName', v)}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Last Name <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={styles.inputContainer}>
-              <Icon name="account" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                value={form.lastName}
-                onChangeText={(v) => handleChange('lastName', v)}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              WMSU Email Address <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={[
-              styles.inputContainer,
-              form.email && !isWMSUEmail(form.email) && styles.inputError
-            ]}>
-              <Icon name="email" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="yourname@wmsu.edu.ph"
-                value={form.email}
-                onChangeText={(v) => handleChange('email', v)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              {form.email && (
-                <Icon 
-                  name={isWMSUEmail(form.email) ? "check-circle" : "close-circle"} 
-                  size={20} 
-                  color={isWMSUEmail(form.email) ? "#4caf50" : "#f44336"} 
+              <View style={styles.inputContainer}>
+                <Icon name="account" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="First Name"
+                  value={form.firstName}
+                  onChangeText={(v) => handleChange('firstName', v)}
+                  autoCapitalize="words"
                 />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Middle Name</Text>
+              <View style={styles.inputContainer}>
+                <Icon name="account-outline" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Middle Name (Optional)"
+                  value={form.middleName}
+                  onChangeText={(v) => handleChange('middleName', v)}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                Last Name <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.inputContainer}>
+                <Icon name="account" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Last Name"
+                  value={form.lastName}
+                  onChangeText={(v) => handleChange('lastName', v)}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                WMSU Email Address <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={[
+                styles.inputContainer,
+                form.email && !isWMSUEmail(form.email) && styles.inputError
+              ]}>
+                <Icon name="email" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="yourname@wmsu.edu.ph"
+                  value={form.email}
+                  onChangeText={(v) => handleChange('email', v)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                {form.email && (
+                  <Icon 
+                    name={isWMSUEmail(form.email) ? "check-circle" : "close-circle"} 
+                    size={20} 
+                    color={isWMSUEmail(form.email) ? "#4caf50" : "#f44336"} 
+                  />
+                )}
+              </View>
+              {form.email && !isWMSUEmail(form.email) && (
+                <Text style={styles.errorText}>Must be a @wmsu.edu.ph email</Text>
               )}
             </View>
-            {form.email && !isWMSUEmail(form.email) && (
-              <Text style={styles.errorText}>Must be a @wmsu.edu.ph email</Text>
-            )}
-          </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Password <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={styles.inputContainer}>
-              <Icon name="lock" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password (min. 6 characters)"
-                value={form.password}
-                onChangeText={(v) => handleChange('password', v)}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Icon 
-                  name={showPassword ? "eye-off" : "eye"} 
-                  size={20} 
-                  color="#666" 
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                Password <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.inputContainer}>
+                <Icon name="lock" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password (min. 6 characters)"
+                  value={form.password}
+                  onChangeText={(v) => handleChange('password', v)}
+                  secureTextEntry={!showPassword}
                 />
-              </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Icon 
+                    name={showPassword ? "eye-off" : "eye"} 
+                    size={20} 
+                    color="#666" 
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Confirm Password <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={styles.inputContainer}>
-              <Icon name="lock-check" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                value={form.confirmPassword}
-                onChangeText={(v) => handleChange('confirmPassword', v)}
-                secureTextEntry={!showConfirmPassword}
-              />
-              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                <Icon 
-                  name={showConfirmPassword ? "eye-off" : "eye"} 
-                  size={20} 
-                  color="#666" 
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                Confirm Password <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.inputContainer}>
+                <Icon name="lock-check" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  value={form.confirmPassword}
+                  onChangeText={(v) => handleChange('confirmPassword', v)}
+                  secureTextEntry={!showConfirmPassword}
                 />
-              </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <Icon 
+                    name={showConfirmPassword ? "eye-off" : "eye"} 
+                    size={20} 
+                    color="#666" 
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-
-          <TouchableOpacity 
-            style={styles.checkboxContainer} 
-            onPress={() => handleChange('agreedToTerms', !form.agreedToTerms)}
-          >
-            <View style={[styles.checkbox, form.agreedToTerms && styles.checkboxChecked]}>
-              {form.agreedToTerms && <Icon name="check" size={16} color="#fff" />}
-            </View>
-            <View style={styles.termsTextContainer}>
-              <Text style={styles.checkboxLabel}>I agree to the </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
-                <Text style={styles.termsLink}>Terms and Conditions</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-
-          {error ? (
-            <View style={styles.errorContainer}>
-              <Icon name="alert-circle" size={20} color="#f44336" />
-              <Text style={styles.errorMessage}>{error}</Text>
-            </View>
-          ) : null}
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={styles.createButton} 
-              onPress={handleSubmit}
-            >
-              <Text style={styles.createButtonText}>Create Account</Text>
-            </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.cancelButton} 
-              onPress={() => navigation.goBack()}
+              style={styles.checkboxContainer} 
+              onPress={() => handleChange('agreedToTerms', !form.agreedToTerms)}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <View style={[styles.checkbox, form.agreedToTerms && styles.checkboxChecked]}>
+                {form.agreedToTerms && <Icon name="check" size={16} color="#fff" />}
+              </View>
+              <View style={styles.termsTextContainer}>
+                <Text style={styles.checkboxLabel}>I agree to the </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
+                  <Text style={styles.termsLink}>Terms and Conditions</Text>
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.loginLinkContainer}>
-            <Text style={styles.loginLinkText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Login</Text>
-            </TouchableOpacity>
+            {error ? (
+              <View style={styles.errorContainer}>
+                <Icon name="alert-circle" size={20} color="#f44336" />
+                <Text style={styles.errorMessage}>{error}</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                style={styles.createButton} 
+                onPress={handleSubmit}
+              >
+                <Text style={styles.createButtonText}>Create Account</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.cancelButton} 
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.loginLinkContainer}>
+              <Text style={styles.loginLinkText}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.loginLink}>Login</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ height: 40 }} />
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

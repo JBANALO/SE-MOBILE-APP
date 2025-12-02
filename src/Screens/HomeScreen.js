@@ -5,7 +5,7 @@ import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthProvider';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
-
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -13,13 +13,12 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { attendanceLog, getTodayStats, addManualAbsence, removeAbsence, getAttendancePeriod, recordAttendance } = useAttendance();
   const { user, userData, loading: authLoading } = useAuth();
   
-  
   const getTeacherName = () => {
     if (!user) return 'Teacher';
-    
     
     if (userData?.firstName && userData.firstName.trim()) {
       return userData.firstName;
@@ -56,11 +55,14 @@ export default function HomeScreen() {
     '12/30/2025', 
   ];
 
-  useEffect(() => {
-    if (user) {
-      loadStudents();
-    }
-  }, [user]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user) {
+        loadStudents();
+        setRefreshKey(prev => prev + 1);
+      }
+    }, [user])
+  );
 
   const loadStudents = async () => {
     if (!user) return;
@@ -229,7 +231,7 @@ ${teacher.department}`;
   return (
     <>
       <StatusBar backgroundColor="#8B0000" barStyle="light-content" />
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} key={refreshKey}>
         <View style={styles.welcomeCard}>
           <View style={{ flex: 1 }}>
             <Text style={styles.welcomeText}>Welcome, {teacher.name}!</Text>
@@ -273,7 +275,7 @@ ${teacher.department}`;
         </View>
 
         <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}> Today's Attendance</Text>
+          <Text style={styles.sectionTitle}>Today's Attendance</Text>
 
           <View style={styles.periodCard}>
             <View style={styles.periodHeader}>
@@ -319,7 +321,7 @@ ${teacher.department}`;
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}> Sections Overview</Text>
+          <Text style={styles.sectionTitle}>Sections Overview</Text>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#8B0000" />

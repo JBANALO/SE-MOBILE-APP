@@ -4,21 +4,26 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthProvider'; 
 import { collection, getDocs, query, where } from 'firebase/firestore'; 
-import { db } from '../../firebase'; 
+import { db } from '../../firebase';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function LogScreen() {
   const [students, setStudents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedPeriod, setSelectedPeriod] = useState('all'); 
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { attendanceLog, getTodayStats } = useAttendance();
-  const { user } = useAuth(); 
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      loadStudents();
-    }
-  }, [user]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user) {
+        loadStudents();
+        setRefreshKey(prev => prev + 1);
+      }
+    }, [user])
+  );
 
   const loadStudents = async () => {
     if (!user) return;
@@ -26,7 +31,7 @@ export default function LogScreen() {
     setLoading(true);
     try {
       const studentsRef = collection(db, 'students');
-      const q = query(studentsRef, where('teacherId', '==', user.uid)); // ✅ Filter by teacher
+      const q = query(studentsRef, where('teacherId', '==', user.uid));
       const querySnapshot = await getDocs(q);
       
       const studentsList = [];
@@ -41,7 +46,6 @@ export default function LogScreen() {
     }
   };
 
-
   const getTodayString = () => {
     return selectedDate.toLocaleDateString('en-US', {
       month: 'numeric',
@@ -50,7 +54,6 @@ export default function LogScreen() {
     });
   };
 
-  
   const getFilteredLogs = () => {
     const dateString = getTodayString();
     let logs = attendanceLog.filter(log => log.date === dateString);
@@ -62,7 +65,6 @@ export default function LogScreen() {
     return logs;
   };
 
-  
   const getLogsBySection = () => {
     const logs = getFilteredLogs();
     const grouped = {};
@@ -77,7 +79,6 @@ export default function LogScreen() {
         };
       }
 
-    
       const morningLog = logs.find(log => 
         log.studentId === student.studentId && log.period === 'morning'
       );
@@ -85,7 +86,6 @@ export default function LogScreen() {
         log.studentId === student.studentId && log.period === 'afternoon'
       );
 
-      
       if (selectedPeriod === 'all' || selectedPeriod === 'morning') {
         if (morningLog) {
           if (morningLog.status === 'present') grouped[section].morning.present++;
@@ -119,7 +119,6 @@ export default function LogScreen() {
   const logsBySection = getLogsBySection();
   const stats = getTodayStats();
 
-  
   const getStatusDisplay = (log) => {
     if (!log) return { text: 'Absent', color: '#f44336' };
     
@@ -135,7 +134,6 @@ export default function LogScreen() {
     }
   };
 
-
   if (!user) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -149,7 +147,6 @@ export default function LogScreen() {
     <>
       <StatusBar backgroundColor="#8B0000" barStyle="light-content" />
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.headerTitle}>Attendance Log</Text>
@@ -164,7 +161,6 @@ export default function LogScreen() {
           </View>
         </View>
 
-        {/* Period Filter */}
         <View style={styles.filterContainer}>
           <TouchableOpacity
             style={[styles.filterButton, selectedPeriod === 'all' && styles.filterButtonActive]}
@@ -192,7 +188,6 @@ export default function LogScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Stats Summary */}
         {selectedPeriod === 'all' ? (
           <View style={styles.statsRow}>
             <View style={styles.periodStats}>
@@ -235,7 +230,7 @@ export default function LogScreen() {
           </View>
         )}
 
-        <ScrollView style={styles.scrollView}>
+        <ScrollView style={styles.scrollView} key={refreshKey}>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#8B0000" />
@@ -285,7 +280,6 @@ export default function LogScreen() {
                       </View>
                     )}
 
-                    
                     {section.students.map((student, index) => (
                       <View key={student.id} style={styles.studentRow}>
                         <View style={styles.studentInfo}>

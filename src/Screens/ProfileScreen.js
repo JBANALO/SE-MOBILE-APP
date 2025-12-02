@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Alert, Modal, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Alert, Modal, TextInput, Image, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../context/AuthProvider';
@@ -83,7 +83,7 @@ export default function ProfileScreen({ navigation }) {
         subjects: editForm.subjects,
       });
 
-      Alert.alert('Success', 'Profile updated successfully!');
+      Alert.alert('Success', 'Profile updated successfully');
       setEditModalVisible(false);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -107,7 +107,7 @@ export default function ProfileScreen({ navigation }) {
       return;
     }
 
-    Alert.alert('Feature Coming Soon', 'Password change feature will be available soon!');
+    Alert.alert('Feature Coming Soon', 'Password change feature will be available soon');
     setChangePasswordModalVisible(false);
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
@@ -180,7 +180,7 @@ export default function ProfileScreen({ navigation }) {
           photoURL: downloadURL,
         });
         
-        Alert.alert('Success', 'Profile photo updated!');
+        Alert.alert('Success', 'Profile photo updated');
       } else {
         const errorText = await uploadResponse.text();
         console.error('Upload failed:', errorText);
@@ -360,7 +360,10 @@ export default function ProfileScreen({ navigation }) {
         visible={editModalVisible}
         onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Profile</Text>
@@ -369,9 +372,13 @@ export default function ProfileScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalScroll}>
+            <ScrollView 
+              style={styles.modalScroll}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>First Name *</Text>
+                <Text style={styles.inputLabel}>First Name</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="First Name"
@@ -393,7 +400,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Last Name *</Text>
+                <Text style={styles.inputLabel}>Last Name</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Last Name"
@@ -443,6 +450,8 @@ export default function ProfileScreen({ navigation }) {
                   onChangeText={(text) => setEditForm({ ...editForm, subjects: text })}
                 />
               </View>
+
+              <View style={{ height: 20 }} />
             </ScrollView>
 
             <View style={styles.modalButtons}>
@@ -460,7 +469,7 @@ export default function ProfileScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -469,7 +478,10 @@ export default function ProfileScreen({ navigation }) {
         visible={changePasswordModalVisible}
         onRequestClose={() => setChangePasswordModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Change Password</Text>
@@ -478,9 +490,13 @@ export default function ProfileScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalScroll}>
+            <ScrollView 
+              style={styles.modalScroll}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Current Password *</Text>
+                <Text style={styles.inputLabel}>Current Password</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter current password"
@@ -491,7 +507,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>New Password *</Text>
+                <Text style={styles.inputLabel}>New Password</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter new password (min. 6 characters)"
@@ -502,7 +518,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Confirm New Password *</Text>
+                <Text style={styles.inputLabel}>Confirm New Password</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Confirm new password"
@@ -511,6 +527,8 @@ export default function ProfileScreen({ navigation }) {
                   secureTextEntry
                 />
               </View>
+
+              <View style={{ height: 20 }} />
             </ScrollView>
 
             <View style={styles.modalButtons}>
@@ -531,7 +549,7 @@ export default function ProfileScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -764,7 +782,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '80%',
+    maxHeight: '85%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -778,7 +796,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   modalScroll: {
-    maxHeight: 400,
+    flexGrow: 0,
   },
   inputGroup: {
     marginBottom: 16,
