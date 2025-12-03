@@ -4,10 +4,14 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendEmailVerification
+  sendEmailVerification,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase'; 
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -27,7 +31,6 @@ export default function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-       
         await loadUserData(firebaseUser.uid);
       } else {
         setUser(null);
@@ -50,7 +53,12 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  
+  const refreshUserData = async () => {
+    if (user?.uid) {
+      await loadUserData(user.uid);
+    }
+  };
+
   const register = async (formData) => {
     try {
       const { firstName, middleName, lastName, email, password } = formData;
@@ -58,10 +66,8 @@ export default function AuthProvider({ children }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
 
-     
       await sendEmailVerification(userCredential.user);
 
-      
       await setDoc(doc(db, 'users', uid), {
         uid,
         firstName,
@@ -69,12 +75,11 @@ export default function AuthProvider({ children }) {
         lastName,
         email,
         fullName: `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`,
-        role: 'teacher', // Default role
+        role: 'teacher',
         emailVerified: false,
         createdAt: new Date().toISOString(),
       });
 
-      // Sign out the user after registration (they need to verify email first)
       await signOut(auth);
 
       return { 
@@ -84,7 +89,6 @@ export default function AuthProvider({ children }) {
     } catch (error) {
       console.error('Registration error:', error);
       
-      // Handle Firebase errors
       let errorMessage = 'Registration failed. Please try again.';
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'This email is already registered. Please login instead.';
@@ -98,14 +102,11 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  
   const login = async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-   
       if (!userCredential.user.emailVerified) {
-        
         await signOut(auth);
         return { 
           success: false, 
@@ -116,7 +117,6 @@ export default function AuthProvider({ children }) {
 
       await loadUserData(userCredential.user.uid);
 
-  
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         emailVerified: true
       }, { merge: true });
@@ -140,7 +140,6 @@ export default function AuthProvider({ children }) {
     }
   };
 
- 
   const resendVerificationEmail = async () => {
     try {
       if (auth.currentUser) {
@@ -163,7 +162,37 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      if (!user) {
+        return { success: false, error: 'No user logged in' };
+      }
+
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
+      
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+
+      return { success: true, message: 'Password updated successfully' };
+    } catch (error) {
+      console.error('Change password error:', error);
+      
+      let errorMessage = 'Failed to change password. Please try again.';
+      if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Current password is incorrect';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'New password is too weak';
+      } else if (error.code === 'auth/requires-recent-login') {
+        errorMessage = 'Please logout and login again before changing password';
+      }
+
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -184,6 +213,8 @@ export default function AuthProvider({ children }) {
     login,
     logout,
     resendVerificationEmail,
+    refreshUserData,
+    changePassword,
   };
 
   return (
